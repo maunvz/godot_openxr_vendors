@@ -37,6 +37,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include "include/openxr_fb_scene_capture_extension_wrapper.h"
+#include "include/openxr_fb_spatial_entity_extension_wrapper.h"
 
 #include "export/export_plugin.h"
 #include "export/meta_export_plugin.h"
@@ -49,6 +50,9 @@ void initialize_plugin_module(ModuleInitializationLevel p_level)
 		case MODULE_INITIALIZATION_LEVEL_CORE: {
 			ClassDB::register_class<OpenXRFbSceneCaptureExtensionWrapper>();
 			OpenXRFbSceneCaptureExtensionWrapper::get_singleton()->register_extension_wrapper();
+
+			ClassDB::register_class<OpenXRFbSpatialEntityExtensionWrapper>();
+			OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->register_extension_wrapper();
 		} break;
 
 		case MODULE_INITIALIZATION_LEVEL_EDITOR: {
