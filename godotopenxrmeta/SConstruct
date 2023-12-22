@@ -16,6 +16,8 @@ env_meta.Append(CPPPATH=[
 sources = common_objects.copy()
 sources += Glob("src/main/cpp/*.cpp")
 sources += Glob("src/main/cpp/export/*.cpp")
+sources += Glob("src/main/cpp/scene/*.cpp")
+sources += Glob("src/main/cpp/utils/*.cpp")
 
 binary_path = '#demo/addons/godotopenxrvendors/meta/.bin'
 project_name = 'godotopenxrmeta'

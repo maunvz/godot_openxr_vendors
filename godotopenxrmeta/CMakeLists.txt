@@ -38,6 +38,7 @@ target_include_directories(${CMAKE_PROJECT_NAME}
         ${OPENXR_HEADERS_DIR}
         ${OPENXR_MOBILE_HEADERS_DIR}
         ${COMMON_LIB_HEADERS_DIR}
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/
         )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

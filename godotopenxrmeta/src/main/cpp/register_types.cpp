@@ -44,6 +44,9 @@
 
 #include "export/export_plugin.h"
 #include "export/meta_export_plugin.h"
+#include "scene/xr_scene_object.h"
+#include "scene/xr_scene_manager.h"
+#include "scene/xr_scene_provider_openxr.h"
 
 using namespace godot;
 
@@ -65,6 +68,11 @@ void initialize_plugin_module(ModuleInitializationLevel p_level)
 
 			ClassDB::register_class<OpenXRFbSceneExtensionWrapper>();
 			OpenXRFbSceneExtensionWrapper::get_singleton()->register_extension_wrapper();
+
+			ClassDB::register_class<XrSceneObject>();
+			ClassDB::register_class<XrSceneManager>();
+			ClassDB::register_class<XrSceneProviderOpenXR>();
+			memnew(XrSceneProviderOpenXR)->register_extension_wrapper();
 		} break;
 
 		case MODULE_INITIALIZATION_LEVEL_EDITOR: {
