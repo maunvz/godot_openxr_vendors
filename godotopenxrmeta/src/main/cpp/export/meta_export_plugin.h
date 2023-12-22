@@ -88,6 +88,9 @@ private:
 	Dictionary _passthrough_option;
 	Dictionary _use_anchor_api_option;
 	Dictionary _use_scene_api_option;
+	Dictionary _use_overlay_keyboard_option;
+	Dictionary _use_experimental_features_option;
+	Dictionary _boundary_mode_option;
 	Dictionary _support_quest_1_option;
 	Dictionary _support_quest_2_option;
 	Dictionary _support_quest_3_option;
