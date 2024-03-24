@@ -83,6 +83,9 @@
 #include "classes/openxr_fb_spatial_entity_query.h"
 #include "classes/openxr_fb_spatial_entity_user.h"
 #include "classes/openxr_meta_passthrough_color_lut.h"
+#include "classes/xr_scene_object.h"
+#include "classes/xr_scene_manager.h"
+#include "classes/xr_scene_provider_openxr.h"
 
 using namespace godot;
 
@@ -159,6 +162,11 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 			ClassDB::register_class<OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper>();
 			OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::get_singleton()->register_extension_wrapper();
 #endif
+
+			ClassDB::register_class<XrSceneObject>();
+			ClassDB::register_class<XrSceneManager>();
+			ClassDB::register_class<XrSceneProviderOpenXR>();
+			memnew(XrSceneProviderOpenXR)->register_extension_wrapper();
 		} break;
 
 		case MODULE_INITIALIZATION_LEVEL_SERVERS:

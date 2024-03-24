@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <openxr/openxr.h>
 #include <godot_cpp/classes/open_xr_extension_wrapper_extension.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
@@ -38,6 +40,20 @@
 #include "util.h"
 
 using namespace godot;
+
+struct XrSceneObjectInternal {
+	XrUuidEXT uuid;
+	XrSpace space;
+	PackedStringArray labels;
+
+	// Vertices and lines on a plane, probably use this for a floor / ceiling as they are irregularly shaped
+	// We store a std::vector instead of XrBoundary2DFB to own the vertex memory
+	std::optional<Vector<XrVector2f>> boundary2D;
+	// A rectangle containing the whole thing, perfect for desks / tables / play surfaces
+	std::optional<XrRect2Df> boundingBox2D;
+	// 3D box for the whole thing, better for obstacles and other objects not used as a surface
+	std::optional<XrRect3DfFB> boundingBox3D;
+};
 
 // Wrapper for the set of Facebook XR scene extension.
 class OpenXRFbSceneExtensionWrapper : public OpenXRExtensionWrapperExtension {
@@ -72,6 +88,7 @@ public:
 	Rect2 get_bounding_box_2d(const XrSpace p_space);
 	AABB get_bounding_box_3d(const XrSpace p_space);
 	PackedVector2Array get_boundary_2d(const XrSpace p_space);
+	void get_shapes(const XrSpace &space, XrSceneObjectInternal &object);
 
 protected:
 	static void _bind_methods();

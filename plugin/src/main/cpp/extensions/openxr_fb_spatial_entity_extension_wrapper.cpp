@@ -256,6 +256,22 @@ void OpenXRFbSpatialEntityExtensionWrapper::print_supported_components(const XrS
 	WARN_PRINT(output);
 }
 
+bool OpenXRFbSpatialEntityExtensionWrapper::is_component_supported(const XrSpace &space, XrSpaceComponentTypeFB type) {
+	uint32_t numComponents = 0;
+	xrEnumerateSpaceSupportedComponentsFB(space, 0, &numComponents, nullptr);
+	Vector<XrSpaceComponentTypeFB> components;
+	components.resize(numComponents);
+	xrEnumerateSpaceSupportedComponentsFB(space, numComponents, &numComponents, components.ptrw());
+
+	bool supported = false;
+	for (uint32_t c = 0; c < numComponents; ++c) {
+		if (components[c] == type) {
+			supported = true;
+			break;
+		}
+	}
+	return supported;
+}
 
 bool OpenXRFbSpatialEntityExtensionWrapper::is_component_enabled(const XrSpace &space, XrSpaceComponentTypeFB type) {
 	XrSpaceComponentStatusFB status = { XR_TYPE_SPACE_COMPONENT_STATUS_FB, nullptr };

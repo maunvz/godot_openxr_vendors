@@ -176,6 +176,39 @@ bool OpenXRFbSceneExtensionWrapper::get_room_layout(const XrSpace p_space, RoomL
 	return true;
 }
 
+void OpenXRFbSceneExtensionWrapper::get_shapes(const XrSpace &space, XrSceneObjectInternal &object) {
+	if (OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->is_component_enabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB)) {
+		//  Grab both the bounding box 2D and the boundary
+		XrRect2Df boundingBox2D;
+		if (XR_SUCCEEDED(xrGetSpaceBoundingBox2DFB(SESSION, space, &boundingBox2D))) {
+			object.boundingBox2D = boundingBox2D;
+		}
+
+		XrBoundary2DFB boundary2D = { XR_TYPE_BOUNDARY_2D_FB, nullptr, 0 };
+		if (XR_SUCCEEDED(xrGetSpaceBoundary2DFB(SESSION, space, &boundary2D))) {
+			Vector<XrVector2f> vertices;
+			vertices.resize(boundary2D.vertexCountOutput);
+			boundary2D.vertexCapacityInput = vertices.size();
+			boundary2D.vertices = vertices.ptrw();
+			if (XR_SUCCEEDED(xrGetSpaceBoundary2DFB(SESSION, space, &boundary2D))) {
+				object.boundary2D = vertices;
+			}
+		}
+	}
+
+	if (OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->is_component_enabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_3D_FB)) {
+		XrRect3DfFB boundingBox3D;
+		if (XR_SUCCEEDED(xrGetSpaceBoundingBox3DFB(SESSION, space, &boundingBox3D))) {
+			object.boundingBox3D = boundingBox3D;
+		}
+	}
+
+	// TODO: Need to enable the extension for this
+	// if (is_component_enabled(space, XR_SPACE_COMPONENT_TYPE_TRIANGLE_MESH_META)) {
+	// 	WARN_PRINT("Found component with XR_SPACE_COMPONENT_TYPE_TRIANGLE_MESH_META");
+	// }
+}
+
 Rect2 OpenXRFbSceneExtensionWrapper::get_bounding_box_2d(const XrSpace p_space) {
 	if (!OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->is_component_enabled(p_space, XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB)) {
 		return Rect2();
