@@ -18,6 +18,7 @@ sources += Glob("#plugin/src/main/cpp/*.cpp")
 sources += Glob("#plugin/src/main/cpp/export/*.cpp")
 sources += Glob("#plugin/src/main/cpp/extensions/*.cpp")
 sources += Glob("#plugin/src/main/cpp/classes/*.cpp")
+sources += Glob("#plugin/src/main/cpp/utils/*.cpp")
 
 if env["target"] in ["editor", "template_debug"]:
   doc_data = env.GodotCPPDocData("#plugin/src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))

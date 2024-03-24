@@ -29,11 +29,28 @@
 
 #include "extensions/openxr_fb_spatial_entity_extension_wrapper.h"
 
+#include <map>
+
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/classes/open_xrapi_extension.hpp>
 #include <godot_cpp/classes/xr_positional_tracker.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+
+namespace {
+
+static const std::map<XrSpaceComponentTypeFB, std::string> component_names = {
+	{XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB, "XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB"},
+	{XR_SPACE_COMPONENT_TYPE_STORABLE_FB, "XR_SPACE_COMPONENT_TYPE_STORABLE_FB"},
+	{XR_SPACE_COMPONENT_TYPE_SHARABLE_FB, "XR_SPACE_COMPONENT_TYPE_SHARABLE_FB"},
+	{XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB, "XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB"},
+	{XR_SPACE_COMPONENT_TYPE_BOUNDED_3D_FB, "XR_SPACE_COMPONENT_TYPE_BOUNDED_3D_FB"},
+	{XR_SPACE_COMPONENT_TYPE_SEMANTIC_LABELS_FB, "XR_SPACE_COMPONENT_TYPE_SEMANTIC_LABELS_FB"},
+	{XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB, "XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB"},
+	{XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB, "XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB"},
+};
+
+} // anonymous namespace
 
 using namespace godot;
 
@@ -220,6 +237,25 @@ Vector<XrSpaceComponentTypeFB> OpenXRFbSpatialEntityExtensionWrapper::get_suppor
 
 	return components;
 }
+
+void OpenXRFbSpatialEntityExtensionWrapper::print_supported_components(const XrSpace& space) {
+	uint32_t numComponents = 0;
+	xrEnumerateSpaceSupportedComponentsFB(space, 0, &numComponents, nullptr);
+	Vector<XrSpaceComponentTypeFB> components;
+	components.resize(numComponents);
+	xrEnumerateSpaceSupportedComponentsFB(space, numComponents, &numComponents, components.ptrw());
+
+	String output("Supported: ");
+	for (uint32_t c = 0; c < numComponents; ++c) {
+		if (component_names.count(components[c])) {
+			output = output + String(", ") + String(component_names.at(components[c]).c_str());
+		} else {
+			output = output + String(", UNKOWN: [") + String(std::to_string((int) components[c]).c_str()) + String("]");
+		}
+	}
+	WARN_PRINT(output);
+}
+
 
 bool OpenXRFbSpatialEntityExtensionWrapper::is_component_enabled(const XrSpace &space, XrSpaceComponentTypeFB type) {
 	XrSpaceComponentStatusFB status = { XR_TYPE_SPACE_COMPONENT_STATUS_FB, nullptr };

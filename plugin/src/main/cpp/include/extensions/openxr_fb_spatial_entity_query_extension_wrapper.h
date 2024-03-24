@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include <openxr/openxr.h>
 #include <godot_cpp/classes/open_xr_extension_wrapper_extension.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
@@ -55,7 +57,14 @@ public:
 
 	static OpenXRFbSpatialEntityQueryExtensionWrapper *get_singleton();
 
-	typedef void (*QueryCompleteCallback)(const Vector<XrSpaceQueryResultFB> &p_results, void *p_userdata);
+	typedef std::function<void(const Vector<XrSpaceQueryResultFB> &p_results, void *p_userdata)> QueryCompleteCallback;
+	// typedef void (*QueryCompleteCallback)(const Vector<XrSpaceQueryResultFB> &p_results, void *p_userdata);
+
+	// Performs a query of all persisted anchors, emits a signal upon completion
+	void query_persisted_anchors(int request_id);
+
+	// Wrapper around query_spatial_entities to get a single anchor by UUID
+	void query_spatial_entities_by_uuid(const String& uuid, QueryCompleteCallback callback);
 
 	// Attempts to query spatial entities given an XrSpaceQueryInfoFB. The callback will run to
 	// deliver results when they are available.

@@ -30,8 +30,11 @@
 #ifndef OPENXR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_WRAPPER_H
 #define OPENXR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_WRAPPER_H
 
+#include <functional>
 #include <openxr/openxr.h>
+
 #include <godot_cpp/classes/open_xr_extension_wrapper_extension.hpp>
+#include <godot_cpp/classes/xr_positional_tracker.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 
 #include "util.h"
@@ -48,16 +51,33 @@ public:
 	void _on_instance_destroyed() override;
 	virtual bool _on_event_polled(const void *event) override;
 
+	void _on_process() override;
+
 	bool is_spatial_entity_storage_supported() {
 		return fb_spatial_entity_storage_ext;
 	}
 
 	static OpenXRFbSpatialEntityStorageExtensionWrapper *get_singleton();
 
-	typedef void (*StorageRequestCompleteCallback)(XrResult p_result, XrSpaceStorageLocationFB p_location, void *p_userdata);
+	typedef std::function<void(XrResult p_result, XrSpaceStorageLocationFB p_location, void *p_userdata)> StorageRequestCompleteCallback;
+	// typedef void (*StorageRequestCompleteCallback)(XrResult p_result, XrSpaceStorageLocationFB p_location, void *p_userdata);
 
 	bool save_space(const XrSpaceSaveInfoFB *p_info, StorageRequestCompleteCallback p_callback, void *p_userdata);
 	bool erase_space(const XrSpaceEraseInfoFB *p_info, StorageRequestCompleteCallback p_callback, void *p_userdata);
+
+	// Creates an XRPositionalTracker that represents the persistent anchor with the specified uuid
+	void start_tracking_persistent_anchor(const String& uuid);
+
+	// Releases the XRPositionalTracker that represents the persistent anchor with the specified uuid
+	void stop_tracking_persistent_anchor(const String& uuid);
+
+	// Creates an anchor with the given transform relative to play_space. When ready, this gets
+	// expressed as an XRPositionalTracker, whose name will be tracker_name.
+	void create_persistent_anchor(const Transform3D &transform, int request_id);
+
+	// Deletes a persistent anchor with the specified UUID. If there is an XRPositionalTracker
+	// that represents it, that will be deleted too
+	void delete_persistent_anchor(const String& uuid);
 
 	OpenXRFbSpatialEntityStorageExtensionWrapper();
 	~OpenXRFbSpatialEntityStorageExtensionWrapper();
@@ -80,6 +100,13 @@ private:
 	void on_space_save_complete(const XrEventDataSpaceSaveCompleteFB *event);
 	void on_space_erase_complete(const XrEventDataSpaceEraseCompleteFB *event);
 
+	// CORE
+	EXT_PROTO_XRRESULT_FUNC4(xrLocateSpace,
+		(XrSpace), space,
+		(XrSpace), baseSpace,
+		(XrTime), time,
+		(XrSpaceLocation*), location)
+
 	HashMap<String, bool *> request_extensions;
 
 	struct RequestInfo {
@@ -95,6 +122,9 @@ private:
 	};
 
 	HashMap<XrAsyncRequestIdFB, RequestInfo> requests;
+
+	HashMap<String, XrSpace> anchor_spaces;
+	HashMap<String, Ref<XRPositionalTracker>> trackers;
 
 	void cleanup();
 

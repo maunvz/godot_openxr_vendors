@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include <openxr/openxr.h>
 #include <godot_cpp/classes/open_xr_extension_wrapper_extension.hpp>
 #include <godot_cpp/classes/xr_positional_tracker.hpp>
@@ -53,9 +55,12 @@ public:
 		return fb_spatial_entity_ext;
 	}
 
-	typedef void (*SpatialAnchorCreatedCallback)(XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata);
-	typedef void (*SetComponentEnabledCallback)(XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata);
-	typedef void (*CreateSpatialAnchorCallback)(const XrEventDataSpatialAnchorCreateCompleteFB *eventData);
+	typedef std::function<void(XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata)> SpatialAnchorCreatedCallback;
+	typedef std::function<void(XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata)> SetComponentEnabledCallback;
+	typedef std::function<void(const XrEventDataSpatialAnchorCreateCompleteFB *eventData)> CreateSpatialAnchorCallback;
+	// typedef void (*SpatialAnchorCreatedCallback)(XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata);
+	// typedef void (*SetComponentEnabledCallback)(XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata);
+	// typedef void (*CreateSpatialAnchorCallback)(const XrEventDataSpatialAnchorCreateCompleteFB *eventData);
 
 	bool create_spatial_anchor(const Transform3D &p_transform, SpatialAnchorCreatedCallback p_callback, void *p_userdata);
 	bool destroy_space(const XrSpace &p_space);
@@ -67,6 +72,9 @@ public:
 	void track_entity(const StringName &p_name, const XrSpace &p_space);
 	void untrack_entity(const StringName &p_name);
 	bool is_entity_tracked(const StringName &p_name) const;
+
+	void print_supported_components(const XrSpace &space);
+	bool is_component_supported(const XrSpace &space, XrSpaceComponentTypeFB type);
 
 	virtual bool _on_event_polled(const void *event) override;
 
