@@ -55,6 +55,7 @@ public:
 
 	typedef void (*SpatialAnchorCreatedCallback)(XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata);
 	typedef void (*SetComponentEnabledCallback)(XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata);
+	typedef void (*CreateSpatialAnchorCallback)(const XrEventDataSpatialAnchorCreateCompleteFB *eventData);
 
 	bool create_spatial_anchor(const Transform3D &p_transform, SpatialAnchorCreatedCallback p_callback, void *p_userdata);
 	bool destroy_space(const XrSpace &p_space);
@@ -115,6 +116,7 @@ private:
 	bool initialize_fb_spatial_entity_extension(const XrInstance &instance);
 	void on_spatial_anchor_created(const XrEventDataSpatialAnchorCreateCompleteFB *event);
 	void on_set_component_enabled_complete(const XrEventDataSpaceSetStatusCompleteFB *event);
+	void on_create_spatial_anchor_complete(const XrEventDataSpatialAnchorCreateCompleteFB *eventData);
 
 	HashMap<String, bool *> request_extensions;
 
@@ -143,6 +145,17 @@ private:
 		}
 	};
 	HashMap<XrAsyncRequestIdFB, SetComponentEnabledInfo> set_component_enabled_info;
+
+	struct CreateSpatialAnchorInfo {
+		CreateSpatialAnchorCallback callback = nullptr;
+
+		CreateSpatialAnchorInfo() { }
+
+		CreateSpatialAnchorInfo(CreateSpatialAnchorCallback p_callback) {
+			callback = p_callback;
+		}
+	};
+	HashMap<XrAsyncRequestIdFB, CreateSpatialAnchorInfo> create_spatial_anchor_info;
 
 	struct TrackedEntity {
 		XrSpace space = XR_NULL_HANDLE;

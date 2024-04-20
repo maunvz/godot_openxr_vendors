@@ -157,6 +157,11 @@ bool OpenXRFbSpatialEntityExtensionWrapper::_on_event_polled(const void *event) 
 		return true;
 	}
 
+	if (static_cast<const XrEventDataBuffer *>(event)->type == XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB) {
+		on_create_spatial_anchor_complete((const XrEventDataSpatialAnchorCreateCompleteFB *)event);
+		return true;
+	}
+
 	return false;
 }
 
@@ -251,6 +256,17 @@ void OpenXRFbSpatialEntityExtensionWrapper::on_set_component_enabled_complete(co
 	SetComponentEnabledInfo *info = set_component_enabled_info.getptr(event->requestId);
 	info->callback(event->result, event->componentType, event->enabled, info->userdata);
 	set_component_enabled_info.erase(event->requestId);
+}
+
+void OpenXRFbSpatialEntityExtensionWrapper::on_create_spatial_anchor_complete(const XrEventDataSpatialAnchorCreateCompleteFB *event) {
+	if (!create_spatial_anchor_info.has(event->requestId)) {
+		WARN_PRINT("Received unexpected XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB");
+		return;
+	}
+
+	CreateSpatialAnchorInfo *info = create_spatial_anchor_info.getptr(event->requestId);
+	info->callback(event);
+	create_spatial_anchor_info.erase(event->requestId);
 }
 
 void OpenXRFbSpatialEntityExtensionWrapper::track_entity(const StringName &p_name, const XrSpace &p_space) {
