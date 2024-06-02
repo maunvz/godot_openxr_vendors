@@ -226,22 +226,19 @@ void OpenXRFbSpatialEntityStorageExtensionWrapper::stop_tracking_persistent_anch
 }
 
 void OpenXRFbSpatialEntityStorageExtensionWrapper::create_persistent_anchor(const Transform3D &transform, int request_id) {
-	XrTime display_time = (XrTime) get_openxr_api()->get_next_frame_time();
-	XrSpace play_space = (XrSpace) get_openxr_api()->get_play_space();
-
 	// First create the anchor for this session
 	OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->create_spatial_anchor(
-		play_space, display_time, XrGodotUtils::transformToPose(transform),
-		[request_id, this](const XrEventDataSpatialAnchorCreateCompleteFB* createResult) {
-			if (FAILED_EVENT(createResult)) {
-				LOG_FAIL_EVENT(createResult, "Unable to create XrSpace");
+		transform,
+		[request_id, this](XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata) {
+			if (FAILED(p_result)) {
+				LOG_FAIL(p_result, "Unable to create XrSpace");
 				emit_signal("create_persistent_anchor_failed", request_id);
 				return;
 			}
 			// Next enable storable
 			OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->set_component_enabled(
-				createResult->space, XR_SPACE_COMPONENT_TYPE_STORABLE_FB, true,
-				[request_id, createResult, this](XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata) {
+				p_space, XR_SPACE_COMPONENT_TYPE_STORABLE_FB, true,
+				[p_uuid, p_space, request_id, this](XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata) {
 					if (FAILED(p_result)) {
 						LOG_FAIL(p_result, "Unable to enable XR_SPACE_COMPONENT_TYPE_STORABLE_FB for XrSpace");
 						emit_signal("create_persistent_anchor_failed", request_id);
@@ -252,22 +249,23 @@ void OpenXRFbSpatialEntityStorageExtensionWrapper::create_persistent_anchor(cons
 					XrSpaceSaveInfoFB saveInfo = {
 						XR_TYPE_SPACE_SAVE_INFO_FB,
 						nullptr,
-						createResult->space,
+						p_space,
 						XR_SPACE_STORAGE_LOCATION_LOCAL_FB,
 						XR_SPACE_PERSISTENCE_MODE_INDEFINITE_FB
 					};
 					OpenXRFbSpatialEntityStorageExtensionWrapper::get_singleton()->save_space(
 						&saveInfo,
-						[createResult, request_id, this](XrResult saveResult, void*) {
+						[p_uuid, request_id, this](XrResult saveResult, XrSpaceStorageLocationFB p_location, void*) {
 							if (FAILED(saveResult)) {
 								LOG_FAIL(saveResult, "Unable to save XrSpace");
 								emit_signal("create_persistent_anchor_failed", request_id);
 								return;
 							}
-							emit_signal("create_persistent_anchor", request_id, String(XrGodotUtils::uuidToString(createResult->uuid).c_str()));
+							emit_signal("create_persistent_anchor", request_id, String(XrGodotUtils::uuidToString(*p_uuid).c_str()));
 					}, nullptr);
 				}, nullptr);
-		}
+		},
+		nullptr
 	);
 }
 
@@ -287,7 +285,7 @@ void OpenXRFbSpatialEntityStorageExtensionWrapper::delete_persistent_anchor(cons
 					XR_SPACE_STORAGE_LOCATION_LOCAL_FB, // TODO: Don't hardcode this
 				};
 
-				erase_space(&info, [](XrResult, void*){}, nullptr);
+				erase_space(&info, [](XrResult, XrSpaceStorageLocationFB, void*){}, nullptr);
 			} else {
 				// Enable storable so we can delete it
 				OpenXRFbSpatialEntityExtensionWrapper::get_singleton()->set_component_enabled(
@@ -305,7 +303,7 @@ void OpenXRFbSpatialEntityStorageExtensionWrapper::delete_persistent_anchor(cons
 							XR_SPACE_STORAGE_LOCATION_LOCAL_FB, // TODO: Don't hardcode this
 						};
 
-						erase_space(&info, [](XrResult, void*){}, nullptr);
+						erase_space(&info, [](XrResult, XrSpaceStorageLocationFB, void*){}, nullptr);
 					}, nullptr);
 			}
 		} else {

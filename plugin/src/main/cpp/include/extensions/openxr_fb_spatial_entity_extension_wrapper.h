@@ -63,6 +63,7 @@ public:
 	// typedef void (*CreateSpatialAnchorCallback)(const XrEventDataSpatialAnchorCreateCompleteFB *eventData);
 
 	bool create_spatial_anchor(const Transform3D &p_transform, SpatialAnchorCreatedCallback p_callback, void *p_userdata);
+	void create_spatial_anchor2(const XrSpace &playSpace, const XrTime &frameTime, const XrPosef &poseInSpace, CreateSpatialAnchorCallback callback);
 	bool destroy_space(const XrSpace &p_space);
 
 	Vector<XrSpaceComponentTypeFB> get_support_components(const XrSpace &p_space);
