@@ -34,10 +34,13 @@
 struct QuadSurfaceLayer {
 	int handle;
 	int order;
+	bool sideBySide3D; // If true, this is a Stereo 3D Quad Layer (SBS)
 	uint32_t widthPx;
 	uint32_t heightPx;
 	XrSwapchain swapchain;
-	XrCompositionLayerQuad layer;
+	XrCompositionLayerQuad layerMono;
+	XrCompositionLayerQuad layerStereoLeft;
+	XrCompositionLayerQuad layerStereoRight;
 };
 
 #ifdef ANDROID

@@ -35,9 +35,17 @@ AndroidSurfaceLayer::AndroidSurfaceLayer() {
 	set_notify_transform(true);
 	layer = std::make_shared<QuadSurfaceLayer>();
 	layer->handle = -1; // Start off invalid
-	layer->layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
-	layer->layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-	layer->layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+	layer->layerMono.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
+	layer->layerMono.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+	layer->layerMono.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+
+	layer->layerStereoLeft.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
+	layer->layerStereoLeft.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+	layer->layerStereoLeft.eyeVisibility = XR_EYE_VISIBILITY_LEFT;
+
+	layer->layerStereoRight.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
+	layer->layerStereoRight.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+	layer->layerStereoRight.eyeVisibility = XR_EYE_VISIBILITY_RIGHT;
 }
 
 AndroidSurfaceLayer::~AndroidSurfaceLayer() {
@@ -50,6 +58,7 @@ AndroidSurfaceLayer::~AndroidSurfaceLayer() {
 void AndroidSurfaceLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_supported"), &AndroidSurfaceLayer::is_supported);
 	ClassDB::bind_method(D_METHOD("get_android_surface_handle"), &AndroidSurfaceLayer::get_android_surface_handle);
+	ClassDB::bind_method(D_METHOD("set_sbs_3d"), &AndroidSurfaceLayer::set_sbs_3d);
 	ClassDB::bind_method(D_METHOD("set_layer_resolution"), &AndroidSurfaceLayer::set_layer_resolution);
 	ClassDB::bind_method(D_METHOD("set_size_2d_meters"), &AndroidSurfaceLayer::set_size_2d_meters);
 	ClassDB::bind_method(D_METHOD("set_sort_order"), &AndroidSurfaceLayer::set_sort_order);
@@ -67,6 +76,10 @@ int AndroidSurfaceLayer::get_android_surface_handle() {
 	return layer->handle;
 }
 
+void AndroidSurfaceLayer::set_sbs_3d(bool isSbs3d) {
+	layer->sideBySide3D = isSbs3d;
+}
+
 void AndroidSurfaceLayer::set_layer_resolution(int widthPx, int heightPx) {
 #ifdef ANDROID
 	if (layer->widthPx == static_cast<uint32_t>(widthPx) && layer->heightPx == static_cast<uint32_t>(heightPx)) {
@@ -77,7 +90,10 @@ void AndroidSurfaceLayer::set_layer_resolution(int widthPx, int heightPx) {
 		WARN_PRINT(String("Swapchain is already allocated! Invalidating past handle [{0}]...").format(Array::make(layer->handle)));
 		OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::get_singleton()->free_swapchain(layer);
 	}
-	layer->layer.subImage.imageRect = {{0, 0}, {widthPx, heightPx}};
+	layer->layerMono.subImage.imageRect = {{0, 0}, {widthPx, heightPx}};
+	layer->layerStereoLeft.subImage.imageRect = {{0, 0}, {widthPx / 2, heightPx}};
+	layer->layerStereoRight.subImage.imageRect = {{widthPx / 2, 0}, {widthPx / 2, heightPx}};
+
 	OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::get_singleton()->allocate_swapchain(
 			layer,
 			static_cast<uint32_t>(widthPx),
@@ -87,8 +103,13 @@ void AndroidSurfaceLayer::set_layer_resolution(int widthPx, int heightPx) {
 }
 
 void AndroidSurfaceLayer::set_size_2d_meters(float p_width_m, float p_height_m) {
-	layer->layer.size.width = p_width_m;
-	layer->layer.size.height = p_height_m;
+	// Just set all of them
+	layer->layerMono.size.width = p_width_m;
+	layer->layerMono.size.height = p_height_m;
+	layer->layerStereoLeft.size.width = p_width_m;
+	layer->layerStereoLeft.size.height = p_height_m;
+	layer->layerStereoRight.size.width = p_width_m;
+	layer->layerStereoRight.size.height = p_height_m;
 }
 
 void AndroidSurfaceLayer::set_sort_order(int p_sort_order) {
@@ -100,13 +121,29 @@ void AndroidSurfaceLayer::update_transform() {
 	auto rot = transform.get_basis().get_rotation_quaternion();
 	auto pos = transform.get_origin();
 
-	layer->layer.pose.orientation.x = rot.x;
-	layer->layer.pose.orientation.y = rot.y;
-	layer->layer.pose.orientation.z = rot.z;
-	layer->layer.pose.orientation.w = rot.w;
-	layer->layer.pose.position.x = pos.x;
-	layer->layer.pose.position.y = pos.y;
-	layer->layer.pose.position.z = pos.z;
+	layer->layerMono.pose.orientation.x = rot.x;
+	layer->layerMono.pose.orientation.y = rot.y;
+	layer->layerMono.pose.orientation.z = rot.z;
+	layer->layerMono.pose.orientation.w = rot.w;
+	layer->layerMono.pose.position.x = pos.x;
+	layer->layerMono.pose.position.y = pos.y;
+	layer->layerMono.pose.position.z = pos.z;
+
+	layer->layerStereoLeft.pose.orientation.x = rot.x;
+	layer->layerStereoLeft.pose.orientation.y = rot.y;
+	layer->layerStereoLeft.pose.orientation.z = rot.z;
+	layer->layerStereoLeft.pose.orientation.w = rot.w;
+	layer->layerStereoLeft.pose.position.x = pos.x;
+	layer->layerStereoLeft.pose.position.y = pos.y;
+	layer->layerStereoLeft.pose.position.z = pos.z;
+
+	layer->layerStereoRight.pose.orientation.x = rot.x;
+	layer->layerStereoRight.pose.orientation.y = rot.y;
+	layer->layerStereoRight.pose.orientation.z = rot.z;
+	layer->layerStereoRight.pose.orientation.w = rot.w;
+	layer->layerStereoRight.pose.position.x = pos.x;
+	layer->layerStereoRight.pose.position.y = pos.y;
+	layer->layerStereoRight.pose.position.z = pos.z;
 }
 
 void AndroidSurfaceLayer::update_visibility() {

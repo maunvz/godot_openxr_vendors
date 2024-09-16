@@ -174,22 +174,48 @@ void OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_on_instance_destroyed() 
 }
 
 int OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_layer_count() {
-	return layers.size();
+	int layerCount = 0;
+	for (int i = 0; i < layers.size(); i++) {
+		layerCount += 1;
+		if (layers[i]->sideBySide3D) {
+			layerCount += 1;
+		}
+	}
+	return layerCount;
 };
 
 uint64_t OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_layer(int p_index) {
-	XrCompositionLayerQuad* layer = &layers[p_index]->layer;
+	// First, calculate the layerIndex and which eye
+	int layerIndex = 0;
+	int p_index_countdown = p_index;
+	for (; layerIndex < layers.size() && p_index_countdown > 0; layerIndex++) {
+		if (layers[layerIndex]->sideBySide3D) {
+			p_index_countdown--;
+		}
+		p_index_countdown--;
+	}
+
+	// Then grab the layer and quadLayer to return
+	WARN_PRINT("OpenXR: Failed to get swapchain [" + get_openxr_api()->get_error_string(result) + "]");
+
+	auto layer = layers[layerIndex];
+	XrCompositionLayerQuad* quadLayer;
+	if (layer->sideBySide3D) {
+		quadLayer = p_index_countdown == -1 ? &layer->layerStereoLeft : &layer->layerStereoRight;
+	} else {
+		quadLayer = &layer->layerMono;
+	}
 
 	composition_layout_ext.type = XR_TYPE_COMPOSITION_LAYER_IMAGE_LAYOUT_FB;
 	composition_layout_ext.next = nullptr;
 	composition_layout_ext.flags = XR_COMPOSITION_LAYER_IMAGE_LAYOUT_VERTICAL_FLIP_BIT_FB;
 
-	layer->next = &composition_layout_ext;
-	layer->space = (XrSpace) get_openxr_api()->get_play_space();
-	layer->subImage.swapchain = layers[p_index]->swapchain;
-	layer->subImage.imageArrayIndex = 0;
+	quadLayer->next = &composition_layout_ext;
+	quadLayer->space = (XrSpace) get_openxr_api()->get_play_space();
+	quadLayer->subImage.swapchain = layer->swapchain;
+	quadLayer->subImage.imageArrayIndex = 0;
 
-	return reinterpret_cast<uint64_t>(layer);
+	return reinterpret_cast<uint64_t>(quadLayer);
 };
 
 int OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_layer_order(int p_index) {

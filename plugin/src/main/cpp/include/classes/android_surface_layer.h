@@ -49,6 +49,7 @@ public:
 	~AndroidSurfaceLayer();
 
 	int get_android_surface_handle();
+	void set_sbs_3d(bool isSbs3d);
 	void set_layer_resolution(int widthPx, int heightPx);
 	void set_size_2d_meters(float width, float height);
 	void set_sort_order(int sort_order);
