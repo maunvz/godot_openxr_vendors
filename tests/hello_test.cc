@@ -29,26 +29,30 @@ int _get_composition_layer(int p_index, std::vector<QuadSurfaceLayer> layers) {
     if (layers[layerIndex].sideBySide3D) {
       p_index_countdown--;
     }
+    if (p_index_countdown == 0) {
+      p_index_countdown = -1;
+      break;
+    }
     p_index_countdown--;
   }
 
   // Then grab the layer and quadLayer to return
-  auto layer = layers[layerIndex];
-  int quadLayer;
-  if (layer.sideBySide3D) {
-    quadLayer = p_index_countdown == -1 ? LEFT : RIGHT;
-  } else {
-    quadLayer = MONO;
-  }
+  // auto layer = layers[layerIndex];
+  // int quadLayer;
+  // if (layer.sideBySide3D) {
+  //   quadLayer = p_index_countdown == -1 ? LEFT : RIGHT;
+  // } else {
+  //   quadLayer = MONO;
+  // }
 
-  return quadLayer;
+  return layerIndex;
 };
 
 // Demonstrate some basic assertions.
 TEST(HelloTest, BasicAssertions) {
   std::vector<QuadSurfaceLayer> layers = {
     {false},
-    {false},
+    {true},
     {false},
     {false},
   };
@@ -58,6 +62,9 @@ TEST(HelloTest, BasicAssertions) {
   // Expect equality.
   EXPECT_EQ(7 * 6, 42);
 
-  EXPECT_EQ(_get_composition_layer_count(layers), 4);
-  EXPECT_EQ(_get_composition_layer(0, layers), MONO);
+  EXPECT_EQ(_get_composition_layer_count(layers), 5);
+  EXPECT_EQ(_get_composition_layer(0, layers), 0);
+  EXPECT_EQ(_get_composition_layer(1, layers), 1);
+  EXPECT_EQ(_get_composition_layer(2, layers), 1);
+  EXPECT_EQ(_get_composition_layer(3, layers), 2);
 }

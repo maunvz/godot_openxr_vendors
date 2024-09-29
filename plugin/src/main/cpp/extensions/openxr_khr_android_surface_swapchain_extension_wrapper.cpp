@@ -192,12 +192,14 @@ uint64_t OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_laye
 		if (layers[layerIndex]->sideBySide3D) {
 			p_index_countdown--;
 		}
+		if (p_index_countdown == 0) {
+			p_index_countdown = -1;
+			break;
+		}
 		p_index_countdown--;
 	}
 
 	// Then grab the layer and quadLayer to return
-	WARN_PRINT("OpenXR: Failed to get swapchain [" + get_openxr_api()->get_error_string(result) + "]");
-
 	auto layer = layers[layerIndex];
 	XrCompositionLayerQuad* quadLayer;
 	if (layer->sideBySide3D) {
@@ -219,8 +221,21 @@ uint64_t OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_laye
 };
 
 int OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::_get_composition_layer_order(int p_index) {
-	auto layer = layers[p_index];
-	return layer->order;
+	// First, calculate the layerIndex and which eye
+	int layerIndex = 0;
+	int p_index_countdown = p_index;
+	for (; layerIndex < layers.size() && p_index_countdown > 0; layerIndex++) {
+		if (layers[layerIndex]->sideBySide3D) {
+			p_index_countdown--;
+		}
+		if (p_index_countdown == 0) {
+      p_index_countdown = -1;
+			break;
+		}
+		p_index_countdown--;
+	}
+
+	return layers[layerIndex]->order;
 };
 
 bool OpenXRKhrAndroidSurfaceSwapchainExtensionWrapper::initialize_khr_android_surface_swapchain_extension(const XrInstance &p_instance) {

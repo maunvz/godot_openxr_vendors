@@ -106,9 +106,9 @@ void AndroidSurfaceLayer::set_size_2d_meters(float p_width_m, float p_height_m) 
 	// Just set all of them
 	layer->layerMono.size.width = p_width_m;
 	layer->layerMono.size.height = p_height_m;
-	layer->layerStereoLeft.size.width = p_width_m;
+	layer->layerStereoLeft.size.width = p_width_m / 2;
 	layer->layerStereoLeft.size.height = p_height_m;
-	layer->layerStereoRight.size.width = p_width_m;
+	layer->layerStereoRight.size.width = p_width_m / 2;
 	layer->layerStereoRight.size.height = p_height_m;
 }
 
